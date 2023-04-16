@@ -1,7 +1,7 @@
 //! WARNING: you have to include Python.h at the top of your file
 // clang-format off
-#include "src/cpp/func.h"
-#include "src/cpp/class.h"
+#include "src/cpp/PyFunctionAdapter.h"
+#include "src/cpp/PyClassAdapter.h"
 #include <QCoreApplication>
 #include <QDir>
 #include <QDebug>
@@ -9,7 +9,7 @@
 
 int f()
 {
-    PyAdapter py(QString("%1/src/python").arg(QDir::currentPath()), "func");
+    PyFunctionAdapter py(QString("%1/src/python").arg(QDir::currentPath()), "func");
 
     if (!py.init())
     {
@@ -28,7 +28,7 @@ int f()
 
 int f2()
 {
-    PyAdapterC py(QString("%1/src/python").arg(QDir::currentPath()), "class");
+    PyClassAdapter py(QString("%1/src/python").arg(QDir::currentPath()), "class");
 
     if (!py.init())
     {
@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
     QCoreApplication a(argc, argv);
 
     f();
-    f();
+    f2();
 
     return a.exec();
 }

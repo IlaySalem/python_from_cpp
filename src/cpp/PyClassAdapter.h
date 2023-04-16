@@ -10,16 +10,16 @@
 #include <QDebug>
 #include <QFile>
 
-class PyAdapterC
+class PyClassAdapter
 {
 public:
     //! @param pyScriptPath - absolute path to a script dir
     //! @param pyScriptName - script filename without ".py" extension
-    PyAdapterC(const QString& pyScriptPath, const QString& pyScriptName)
+    PyClassAdapter(const QString& pyScriptPath, const QString& pyScriptName)
         : _filePath(pyScriptPath)
         , _fileName(pyScriptName){};
 
-    ~PyAdapterC()
+    ~PyClassAdapter()
     {
         // Вернуть ресурсы системе
         Py_XDECREF(pInstance);
