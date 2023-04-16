@@ -17,11 +17,12 @@ int f()
         return -1;
     }
 
-    qDebug() << py.python_func_get_str("get_value", "Hello from Python!");
+    bool ok = false;
+    qDebug() << py.python_func_get_str("get_value", "Hello from Python!", &ok) << "ok is:" << ok;
 
-    qDebug() << py.python_func_get_val("a");
-    qDebug() << py.python_func_get_val("b");
-    qDebug() << py.python_func_get_val("c");
+    qDebug() << py.python_func_get_val("a", &ok) << "ok is:" << ok;
+    qDebug() << py.python_func_get_val("b", &ok) << "ok is:" << ok;
+    qDebug() << py.python_func_get_val("c", &ok) << "ok is:" << ok;
 
     return 0;
 }
@@ -56,7 +57,7 @@ int main(int argc, char* argv[])
     QCoreApplication a(argc, argv);
 
     f();
-    f2();
+    f();
 
     return a.exec();
 }
