@@ -14,17 +14,19 @@
 class PyObjectAdapter
 {
 public:
-    PyObjectAdapter(PyObject* obj)
+    PyObjectAdapter(PyObject* obj, const QString& name = "tempObject")
         : _obj(obj)
+        , _name(name)
     {
         //TODO: implement check in a soft way (allow uninitialized objects?)
         Q_ASSERT_X(_obj, "PyObjectAdapter", "python object is NULL");
-    };
+    }
+
     ~PyObjectAdapter()
     {
         // Return resources to the system
-        //Py_XDECREF(_obj);
-        qDebug() << "destructor";
+        Py_XDECREF(_obj);
+        qDebug() << "destructor: " << _name;
     }
 
     PyObject* obj() const
@@ -33,7 +35,8 @@ public:
     }
 
 private:
-    PyObject* _obj = nullptr;
+    PyObject*     _obj = nullptr;
+    const QString _name;
 };
 
 class PyAdapter
@@ -47,6 +50,15 @@ public:
 
     ~PyAdapter()
     {
+        //WARNING: destruction of this pointer causes memory curroption
+        //Py_XDECREF(_tempValue);
+        Py_XDECREF(_dict);
+        Py_XDECREF(_module);
+        Py_XDECREF(_name);
+        Py_XDECREF(_folderPath);
+        Py_XDECREF(_sysPath);
+        Py_XDECREF(_sys);
+
         Py_Finalize();
     }
 
@@ -65,15 +77,15 @@ public:
         Py_Initialize();
 
         // Loading sys module
-        auto sys     = PY_OBJECT(PyImport_ImportModule("sys"));
-        auto sysPath = PY_OBJECT(PyObject_GetAttrString(sys->obj(), "path"));
+        _sys     = PyImport_ImportModule("sys");
+        _sysPath = PyObject_GetAttrString(_sys, "path");
         // Our python sources
-        auto folderPath = PY_OBJECT(PyUnicode_FromString(_filePath.toStdString().c_str()));
-        PyList_Append(sysPath->obj(), folderPath->obj());
+        _folderPath = PyUnicode_FromString(_filePath.toStdString().c_str());
+        PyList_Append(_sysPath, _folderPath);
 
         // Creating a Unicode object from UTF-8 string
-        auto name = PY_OBJECT(PyUnicode_FromString(_fileName.toStdString().c_str()));
-        if (!name->obj())
+        _name = PyUnicode_FromString(_fileName.toStdString().c_str());
+        if (!_name)
         {
             // PyErr_Print(); - you should catch the stream if you want to use it
             qWarning() << "name is nullptr";
@@ -81,19 +93,19 @@ public:
         }
 
         // Loading module _fileName
-        auto module = PY_OBJECT(PyImport_Import(name->obj()));
-        if (!module->obj())
+        _module = PyImport_Import(_name);
+        if (!_module)
         {
             qWarning() << "module is nullptr";
             return false;
         }
 
         // Creating a dictionary of objects contained in a module
-        _dict.reset(new PyObjectAdapter(PyModule_GetDict(module->obj())));
-        if (!_dict->obj())
+        _dict = PyModule_GetDict(_module);
+        if (!_dict)
             qWarning() << "_dict is nullptr";
 
-        return _dict->obj();
+        return _dict;
     }
 
     /**
@@ -105,7 +117,7 @@ public:
         QByteArray ret;
 
         // Loading object "funcName" from module _fileName
-        auto objct = PY_OBJECT(PyDict_GetItemString(_dict->obj(), funcName.toStdString().c_str()));
+        auto objct = PY_OBJECT(PyDict_GetItemString(_dict, funcName.toStdString().c_str()));
         if (!objct)
             return ret;
 
@@ -138,11 +150,11 @@ public:
         qint32 ret = -1;
 
         // Get object with name "varName"
-        auto tempValue = PY_OBJECT(PyDict_GetItemString(_dict->obj(), varName.toStdString().c_str()));
+        _tempValue = PyDict_GetItemString(_dict, varName.toStdString().c_str());
 
         // Check variable for "long" type
-        if (tempValue && PyLong_Check(tempValue->obj()))
-            ret = _PyLong_AsInt(tempValue->obj());
+        if (_tempValue && PyLong_Check(_tempValue))
+            ret = _PyLong_AsInt(_tempValue);
         else
             PyErr_Print();
 
@@ -153,7 +165,11 @@ private:
     const QString _filePath;
     const QString _fileName;
 
-    //PyObject*
-
-    QScopedPointer<PyObjectAdapter> _dict;
+    PyObject *_dict       = nullptr,
+             *_sys        = nullptr,
+             *_sysPath    = nullptr,
+             *_folderPath = nullptr,
+             *_name       = nullptr,
+             *_module     = nullptr,
+             *_tempValue  = nullptr;
 };
