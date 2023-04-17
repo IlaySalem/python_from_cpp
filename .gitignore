@@ -1,2 +1,4 @@
 /.clang-format
 /src/python/__pycache__/*
+*.user
+*.pro.user
