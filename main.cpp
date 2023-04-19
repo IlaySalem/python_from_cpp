@@ -1,6 +1,6 @@
 //! WARNING: you have to include Python.h at the top of your file
 // clang-format off
-#include "src/cpp/PyFunctionAdapter.h"
+#include "src/cpp/PyFunction.h"
 #include "src/cpp/PyClassAdapter.h"
 #include <QCoreApplication>
 #include <QDir>

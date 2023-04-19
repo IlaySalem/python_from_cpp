@@ -1,17 +1,18 @@
-#include "PyFunctionAdapter.h"
+#include "PyObjectAdapter.h"
+// WARNING: the order of includes is important!
+#include "PyFunction.h"
 
-PyFunctionAdapter::PyFunctionAdapter(const QString& pyScriptPath, const QString& pyScriptName)
-    : _filePath(pyScriptPath)
-    , _fileName(pyScriptName)
+PyFunction::PyFunction(const QString& pyScriptPath, const QString& pyScriptName)
+    : IPyFunction(pyScriptPath, pyScriptName)
 {
 }
 
-PyFunctionAdapter::~PyFunctionAdapter()
+PyFunction::~PyFunction()
 {
     Py_Finalize();
 }
 
-bool PyFunctionAdapter::init()
+bool PyFunction::init()
 {
     if (!QFile(QString("%1/%2.py").arg(_filePath, _fileName)).exists())
     {
@@ -54,7 +55,7 @@ bool PyFunctionAdapter::init()
     return _dict->obj();
 }
 
-QByteArray PyFunctionAdapter::python_func_get_str(const QString& funcName, const QByteArray& val, bool* ok)
+QByteArray PyFunction::python_func_get_str(const QString& funcName, const QByteArray& val, bool* ok)
 {
     QByteArray ret;
     if (ok)
@@ -86,7 +87,7 @@ QByteArray PyFunctionAdapter::python_func_get_str(const QString& funcName, const
     return ret;
 }
 
-qint32 PyFunctionAdapter::python_func_get_val(const QString& varName, bool* ok)
+qint32 PyFunction::python_func_get_val(const QString& varName, bool* ok)
 {
     qint32 ret = 0;
     if (ok)
